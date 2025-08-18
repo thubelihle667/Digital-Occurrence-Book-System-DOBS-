@@ -1,11 +1,14 @@
-from django.contrib.auth.mixins import UserPassesTestMixin
-from django.http import HttpResponse
+from rest_framework.permissions import BasePermission
+from rest_framework.response import Response
 
-class RoleRequiredMixin(UserPassesTestMixin):
+class RoleRequiredMixin(BasePermission):
+    """
+    DRF permission class to restrict access based on user roles.
+    """
     allowed_roles = []
 
-    def test_func(self):
-        return self.request.user.role in self.allowed_roles
-    
-    def handle_no_permission(self):
-        return HttpResponse("You don't have permission to access this page.")
+    def has_permission(self, request, view):
+        user = request.user
+        if not user.is_authenticated:
+            return False
+        return user.role in self.allowed_roles
