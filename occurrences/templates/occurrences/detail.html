@@ -1,0 +1,24 @@
+{% extends "base.html" %}
+{% block content %}
+<h1>{{ object.reference_no }} — {{ object.title }}</h1>
+<p><strong>Location:</strong> {{ object.location }}</p>
+<p><strong>When:</strong> {{ object.occurrence_time }}</p>
+<p><strong>Status:</strong> {{ object.get_status_display }}</p>
+<p><strong>Reported by:</strong> {{ object.reported_by }}</p>
+<p>{{ object.description|linebreaks }}</p>
+
+<h2>Photos</h2>
+<p><a href="{% url 'occurrence_photo_create' %}">Upload Photo</a></p>
+<div style="display:grid;grid-template-columns:repeat(auto-fill,minmax(160px,1fr));gap:12px;">
+  {% for p in object.photos.all %}
+    <figure>
+      <img src="{{ p.image.url }}" style="width:100%;height:160px;object-fit:cover;border-radius:8px;">
+      <figcaption>{{ p.caption }}</figcaption>
+    </figure>
+  {% empty %}
+    <p>No photos.</p>
+  {% endfor %}
+</div>
+
+<p><a href="{% url 'occurrence_edit' object.pk %}">Edit Occurrence</a></p>
+{% endblock %}
