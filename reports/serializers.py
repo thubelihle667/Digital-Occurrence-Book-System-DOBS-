@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from .models import Report
 
 class SummarySerializer(serializers.Serializer):
     total = serializers.IntegerField()
@@ -12,3 +13,10 @@ class SummarySerializer(serializers.Serializer):
 class TimePointSerializer(serializers.Serializer):
     bucket = serializers.DateTimeField()
     count = serializers.IntegerField()
+
+class ReportSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Report
+        fields = "__all__"
+
+

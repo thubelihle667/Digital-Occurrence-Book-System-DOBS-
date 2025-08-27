@@ -48,3 +48,13 @@ class Occurrence(models.Model):
 
     def __str__(self):
         return self.title
+
+class OccurrencePhoto(models.Model):
+    occurrence = models.ForeignKey(
+        Occurrence, on_delete=models.CASCADE, related_name="photos"
+    )
+    photo = models.ImageField(upload_to="occurrence_photos/")
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f"Photo for {self.occurrence.title}"

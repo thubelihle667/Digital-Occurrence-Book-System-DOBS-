@@ -4,10 +4,10 @@ from rest_framework.views import APIView
 from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserRegistrationSerializer, CustomTokenObtainPairSerialzer
 from .mixins import RoleRequiredMixin
-from rest_framework.permissions import IsAuthenticated
+from rest_framework.permissions import IsAuthenticated, AllowAny
 
 class UserRegistrationView(APIView):
-    permission_classes = [IsAuthenticated, RoleRequiredMixin]
+    permission_classes = [AllowAny] #IsAuthenticated, RoleRequiredMixin]
     RoleRequiredMixin.allowed_roles = ['Administrator']
 
     def post(self, request):

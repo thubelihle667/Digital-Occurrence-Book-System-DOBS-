@@ -44,6 +44,8 @@ INSTALLED_APPS = [
     'reports',
 ]
 
+INSTALLED_APPS += ['drf_spectacular', 'drf_spectacular_sidecar']
+
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
@@ -127,9 +129,37 @@ STATIC_URL = 'static/'
 DEFAULT_AUTO_FIELD = 'django.db.models.BigAutoField'
 AUTH_USER_MODEL = 'accounts.User'
 REST_FRAMEWORK = {
-    'DEFAULT_FILTER_BACKENDS':['django_filters.rest_framework.DjangoFilterBackend'],
+    'DEFAULT_FILTER_BACKENDS':[
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
     'DEFAULT_AUTHENTICATION_CLASSES': (
         'rest_framework_simplejwt.authentication.JWTAuthentication',
     ),
     'DEFAULT_PERMISSION_CLASSES':['rest_framework.permissions.IsAuthenticated'],
 }
+
+REST_FRAMEWORK.update({
+    "DEFAULT_SCHEMA_CLASS": "drf_spectacular.openapi.AutoSchema",
+})
+
+SPECTACULAR_SETTINGS = {
+    "TITLE": "DOBS API",
+    "DESCRIPTION": "Django Occurrence Book System API",
+    "VERSION": "1.0.0",
+}
+
+TEMPLATES[0]["DIRS"] += [BASE_DIR / "templates"]
+
+SECURE_SSL_REDIRECT = False    
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+CSRF_TRUSTED_ORIGINS = [] 
+SECURE_HSTS_SECONDS = 31536000       
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+SECURE_HSTS_PRELOAD = True
+SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
+SECURE_CONTENT_TYPE_NOSNIFF = True
+X_FRAME_OPTIONS = "DENY"
+ALLOWED_HOSTS = ["localhost", "127.0.0.1"]

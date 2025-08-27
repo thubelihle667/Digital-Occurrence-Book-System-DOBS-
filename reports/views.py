@@ -24,6 +24,10 @@ import matplotlib
 matplotlib.use("Agg")  
 import matplotlib.pyplot as plt
 from django.utils.dateformat import format as dj_format
+from .models import Report
+from rest_framework import generics, filters
+from .serializers import ReportSerializer
+from .filters import ReportFilter
 
 # JSON summary (KPIs)
 class SummaryView(APIView):
@@ -150,3 +154,15 @@ class TrendPNGView(APIView):
         resp = HttpResponse(png_io.read(), content_type="image/png")
         resp["Content-Disposition"] = 'inline; filename="trends.png"'
         return resp
+    
+class ReportListView(generics.ListCreateAPIView):
+    queryset = Report.objects.all().order_by("-created_at")
+    serializer_class = ReportSerializer
+    filterset_class = ReportFilter
+    filter_backends = [filters.SearchFilter, filters.OrderingFilter]
+    search_fields = ["title", "summary", "location", "category"]
+    ordering_fields = ["created_at", "location", "category"]
+
+class ReportDetailView(generics.RetrieveUpdateDestroyAPIView):
+    queryset = Report.objects.all()
+    serializer_class = ReportSerializer

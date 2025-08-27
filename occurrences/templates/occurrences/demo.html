@@ -1,0 +1,38 @@
+<!doctype html>
+<html>
+<head>
+  <meta charset="utf-8"/>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <title>DOBS – Occurrences Explorer</title>
+</head>
+<body class="p-6">
+  <h1 class="text-2xl font-bold mb-4">Occurrences Explorer</h1>
+
+  <form id="f" class="grid gap-3 md:grid-cols-5 mb-4">
+    <input name="q" placeholder="Search text" class="border p-2 rounded"/>
+    <input type="datetime-local" name="occurred_at_after" class="border p-2 rounded"/>
+    <input type="datetime-local" name="occurred_at_before" class="border p-2 rounded"/>
+    <input name="location" placeholder="Location" class="border p-2 rounded"/>
+    <input name="category" placeholder="Category" class="border p-2 rounded"/>
+  </form>
+  <button id="btn" class="px-4 py-2 rounded bg-gray-900 text-white">Search</button>
+
+  <div id="out" class="mt-6 grid gap-3"></div>
+
+  <script>
+    const out = document.getElementById("out");
+    document.getElementById("btn").onclick = async () => {
+      const params = new URLSearchParams(new FormData(document.getElementById("f")));
+      const r = await fetch(`/api/occurrences/?${params.toString()}`);
+      const data = await r.json();
+      out.innerHTML = (data.results || data).map(x => `
+        <div class="border rounded p-3">
+          <div class="font-semibold">${x.title ?? "(no title)"} — ${x.category ?? ""}</div>
+          <div class="text-sm opacity-70">${x.location ?? ""}</div>
+          <div class="mt-2">${x.description ?? ""}</div>
+        </div>
+      `).join("");
+    };
+  </script>
+</body>
+</html>
