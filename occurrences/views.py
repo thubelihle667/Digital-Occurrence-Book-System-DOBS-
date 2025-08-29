@@ -1,22 +1,29 @@
-from rest_framework import generics, filters
+from rest_framework import viewsets, permissions, filters, status
+from rest_framework.response import Response
 from django.db.models import Q
-from .models import Occurrence
-from .serializers import OccurrenceSerializer
+from .models import Occurrence, OccurrencePhoto
+from .serializers import OccurrenceSerializer, OccurrencePhotoSerializer
 from .filters import OccurrenceFilter
-from rest_framework import viewsets
-from .models import OccurrencePhoto
-from .serializers import OccurrencePhotoSerializer
 
-class OccurrenceListView(generics.ListCreateAPIView):
+
+class OccurrenceViewSet(viewsets.ModelViewSet):
     queryset = Occurrence.objects.all().order_by("-occurred_at")
     serializer_class = OccurrenceSerializer
-    filterset_class = OccurrenceFilter
+    permission_classes = [permissions.IsAuthenticated]
+    filterset_class = OccurrenceFilter  
     filter_backends = [filters.SearchFilter, filters.OrderingFilter]
-    # DRF SearchFilter uses ?search=
-    search_fields = ["title", "description", "location", "category"] 
+    search_fields = ["title", "description", "location", "category"]
     ordering_fields = ["occurred_at", "created_at", "location", "category"]
 
-    # custom 'q' param fallback (multi-field) for both ?q= and ?search=
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+        occurrence_id = instance.id
+        self.perform_destroy(instance)
+        return Response(
+            {"message": f"Report with ID {occurrence_id} has been successfully deleted."},
+            status=status.HTTP_200_OK
+        )
+
     def get_queryset(self):
         qs = super().get_queryset()
         q = self.request.query_params.get("q")
@@ -28,11 +35,8 @@ class OccurrenceListView(generics.ListCreateAPIView):
                 Q(category__icontains=q)
             )
         return qs
-
-class OccurrenceViewSet(viewsets.ModelViewSet):
-    queryset = Occurrence.objects.all().order_by("-occurred_at")
-    serializer_class = OccurrenceSerializer
-
+    
 class OccurrencePhotoViewSet(viewsets.ModelViewSet):
-    queryset = OccurrencePhoto.objects.all()
+    queryset = OccurrencePhoto.objects.all().order_by("-uploaded_at")
     serializer_class = OccurrencePhotoSerializer
+    permission_classes = [permissions.IsAuthenticated]

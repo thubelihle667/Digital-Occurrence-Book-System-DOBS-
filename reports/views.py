@@ -18,8 +18,6 @@ from reportlab.lib.units import cm
 from reportlab.platypus import SimpleDocTemplate, Paragraph, Table, TableStyle, Spacer
 from reportlab.lib.styles import getSampleStyleSheet
 
-from occurrences.models import Occurrence
-
 import matplotlib
 matplotlib.use("Agg")  
 import matplotlib.pyplot as plt
@@ -49,11 +47,74 @@ class TrendView(APIView):
         data = time_series(qs, date_field, granularity=granularity)
         return Response(TimePointSerializer(data, many=True).data)
     
+from datetime import datetime
+from rest_framework import status
+from rest_framework.views import APIView
+from django.http import HttpResponse
+from .models import Occurrence
+from reportlab.lib.pagesizes import letter
+from reportlab.pdfgen import canvas
 
 class OccurrencesPDFView(APIView):
-    """
-    Returns a generated PDF. Admin-only by default.
-    """
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        queryset = Occurrence.objects.all()
+        date_str = request.GET.get("date")
+        category = request.GET.get("category")
+        status_param = request.GET.get("status")
+
+        # Safe date parsing
+        if date_str:
+            try:
+                parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                queryset = queryset.filter(occurred_at__date=parsed_date)
+            except ValueError:
+                return Response(
+                    {"error": "Invalid date format. Use YYYY-MM-DD."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
+        if category:
+            queryset = queryset.filter(category__icontains=category)
+        if status_param:
+            queryset = queryset.filter(status__icontains=status_param)
+
+        # No results found
+        if not queryset.exists():
+            return Response(
+                {"error": "No occurrences found for the given filters."},
+                status=status.HTTP_404_NOT_FOUND,
+            )
+
+        # Generate PDF
+        response = HttpResponse(content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="occurrences.pdf"'
+
+        p = canvas.Canvas(response, pagesize=letter)
+        width, height = letter
+        y = height - 50
+        p.setFont("Helvetica", 12)
+        p.drawString(100, y, "Occurrences Report")
+        y -= 30
+
+        for occ in queryset:
+            text = f"{occ.id} | {occ.title} | {occ.status} | {occ.category} | {occ.occurred_at.date()}"
+            p.drawString(100, y, text)
+            y -= 20
+            if y < 50:
+                p.showPage()
+                y = height - 50
+
+        p.save()
+        return response
+
+    
+"""
+class OccurrencesPDFView(APIView):
+
+    #Returns a generated PDF. Admin-only by default.
+
     permission_classes = [IsAdminUser]
 
     def get(self, request):
@@ -121,11 +182,12 @@ class OccurrencesPDFView(APIView):
         resp["Content-Disposition"] = f'attachment; filename="{filename}"'
         resp.write(pdf)
         return resp
+    """
 
 """
 Implementation of charts & graphs for incidents trends through Server-rendered PND which does not require front end.
-
 """
+
 class TrendPNGView(APIView):
     permission_classes = [IsAuthenticated]
 
@@ -166,3 +228,92 @@ class ReportListView(generics.ListCreateAPIView):
 class ReportDetailView(generics.RetrieveUpdateDestroyAPIView):
     queryset = Report.objects.all()
     serializer_class = ReportSerializer
+
+from io import BytesIO
+from datetime import datetime
+
+from django.http import HttpResponse
+from reportlab.platypus import SimpleDocTemplate, Table, TableStyle, Paragraph, Spacer
+from reportlab.lib.styles import getSampleStyleSheet
+from reportlab.lib import colors
+from reportlab.lib.pagesizes import A4
+
+from rest_framework.views import APIView
+from rest_framework.permissions import IsAuthenticated
+
+from .models import Report
+
+class ExportReportsPDF(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, *args, **kwargs):
+        # Start with all reports
+        queryset = Report.objects.select_related("created_by").all()
+
+        # Optional filtering by date (match only the day)
+        date_str = request.query_params.get("date")
+        if date_str:
+            try:
+                parsed_date = datetime.strptime(date_str, "%Y-%m-%d").date()
+                queryset = queryset.filter(
+                    created_at__year=parsed_date.year,
+                    created_at__month=parsed_date.month,
+                    created_at__day=parsed_date.day
+                )
+            except ValueError:
+                return HttpResponse("Invalid date format. Use YYYY-MM-DD.", status=400)
+
+        # Optional filtering by category (case-insensitive contains)
+        category = request.query_params.get("category")
+        if category:
+            queryset = queryset.filter(category__icontains=category)
+
+        # Optional filtering by status (if you add a status field later)
+        status_param = request.query_params.get("status")
+        if status_param and hasattr(Report, "status"):
+            queryset = queryset.filter(status__icontains=status_param)
+
+        # Build PDF
+        buffer = BytesIO()
+        doc = SimpleDocTemplate(buffer, pagesize=A4)
+        elements = []
+        styles = getSampleStyleSheet()
+
+        elements.append(Paragraph("Reports Export", styles["Title"]))
+        elements.append(Spacer(1, 12))
+
+        # Table headers
+        data = [["ID", "Title", "Category", "Location", "Created At", "Created By"]]
+
+        if queryset.exists():
+            for report in queryset:
+                data.append([
+                    str(report.id) if report.id else "N/A",
+                    report.title or "N/A",
+                    report.category or "N/A",
+                    report.location or "N/A",
+                    report.created_at.strftime("%Y-%m-%d %H:%M") if report.created_at else "N/A",
+                    report.created_by.username if report.created_by else "N/A",
+                ])
+        else:
+            # If no reports match, still show headers and a row with a message
+            data.append(["No reports found"] + [""] * 5)
+
+        # Table styling
+        table = Table(data, colWidths=[40, 120, 100, 100, 100, 80])
+        table.setStyle(TableStyle([
+            ("BACKGROUND", (0, 0), (-1, 0), colors.gray),
+            ("TEXTCOLOR", (0, 0), (-1, 0), colors.whitesmoke),
+            ("ALIGN", (0, 0), (-1, -1), "CENTER"),
+            ("FONTNAME", (0, 0), (-1, 0), "Helvetica-Bold"),
+            ("BOTTOMPADDING", (0, 0), (-1, 0), 12),
+            ("GRID", (0, 0), (-1, -1), 1, colors.black),
+        ]))
+        elements.append(table)
+
+        # Build and return PDF
+        doc.build(elements)
+        buffer.seek(0)
+        response = HttpResponse(buffer, content_type="application/pdf")
+        response["Content-Disposition"] = 'attachment; filename="reports.pdf"'
+        return response

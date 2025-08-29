@@ -2,10 +2,8 @@ from django.db import models
 from django.conf import settings
 from django.core.validators import FileExtensionValidator
 
-
 def occurrence_photo_path(instance, filename):
     return f"occurrences/{instance.id}/{filename}"
-
 
 class Occurrence(models.Model):
     STATUS_CHOICES = [
