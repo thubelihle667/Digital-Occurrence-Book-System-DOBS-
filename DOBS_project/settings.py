@@ -15,6 +15,8 @@ from datetime import timedelta
 import os
 import dj_database_url
 from decouple import config
+from django.core.exceptions import ImproperlyConfigured
+
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -38,6 +40,12 @@ if not DEBUG and DJANGO_ALLOWED_HOSTS != [""]:
 
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
 CORS_ALLOWED_ORIGINS = [o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
+
+cors_origins = os.getenv("CORS_ALLOWED_ORIGINS")
+if not cors_origins:
+    raise ImproperlyConfigured("CORS_ALLOWED_ORIGINS not set in environment")
+
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(",")]
 
 
 # Application definition
@@ -191,7 +199,6 @@ SECURE_HSTS_PRELOAD = True
 SECURE_REFERRER_POLICY = "strict-origin-when-cross-origin"
 SECURE_CONTENT_TYPE_NOSNIFF = True
 X_FRAME_OPTIONS = "DENY"
-ALLOWED_HOSTS = ["localhost", "127.0.0.1"]
 MEDIA_URL = '/media/'
 MEDIA_ROOT = BASE_DIR / 'media'
 
