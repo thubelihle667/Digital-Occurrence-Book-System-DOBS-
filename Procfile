@@ -1,1 +1,1 @@
-web: gunicorn dobs.wsgi:application --log-file -
+web: gunicorn DOBS_project.wsgi:application --log-file -
