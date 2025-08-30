@@ -29,7 +29,15 @@ SECRET_KEY = config("SECRET_KEY", default="unsafe-dev-key") #'django-insecure-$w
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = config("DEBUG", default=True, cast=bool)
 
-ALLOWED_HOSTS = config("ALLOWED_HOSTS", default="").split(",")
+ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
+
+DJANGO_ALLOWED_HOSTS = os.getenv(
+    "DJANGO_ALLOWED_HOSTS", "127.0.0.1,localhost"
+).split(",")
+
+if not DEBUG:
+    ALLOWED_HOSTS = DJANGO_ALLOWED_HOSTS
+
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
 CORS_ALLOWED_ORIGINS = [o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
@@ -213,7 +221,7 @@ LOGGING = {
     "loggers": {
         "django": {
             "handlers": ["console"],
-            "level": "INFO",  # change to DEBUG to see even more
+            "level": "INFO", 
         },
         "django.request": {
             "handlers": ["console"],
