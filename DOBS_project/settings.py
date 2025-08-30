@@ -31,11 +31,9 @@ DEBUG = os.getenv("DEBUG", "True") == "True"
 
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
-DJANGO_ALLOWED_HOSTS = os.getenv(
-    "DJANGO_ALLOWED_HOSTS", ""
-).split(",")
+DJANGO_ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
 
-if not DEBUG:
+if not DEBUG and DJANGO_ALLOWED_HOSTS != [""]:
     ALLOWED_HOSTS = DJANGO_ALLOWED_HOSTS
 
 CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "").split(",") if o.strip()]
