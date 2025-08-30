@@ -31,6 +31,8 @@ SECRET_KEY = os.getenv("SECRET_KEY", "replace-me") #'django-insecure-$wk$f-g16=n
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.getenv("DEBUG", "True") == "True"
 
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+
 ALLOWED_HOSTS = os.getenv("ALLOWED_HOSTS", "127.0.0.1,localhost").split(",")
 
 DJANGO_ALLOWED_HOSTS = os.getenv("DJANGO_ALLOWED_HOSTS", "").split(",")
@@ -42,10 +44,10 @@ CSRF_TRUSTED_ORIGINS = [o.strip() for o in os.getenv("DJANGO_CSRF_TRUSTED_ORIGIN
 CORS_ALLOWED_ORIGINS = [o.strip() for o in os.getenv("CORS_ALLOWED_ORIGINS", "").split(",") if o.strip()]
 
 cors_origins = os.getenv("CORS_ALLOWED_ORIGINS")
-if not cors_origins:
+if not cors_origins and not DEBUG:
     raise ImproperlyConfigured("CORS_ALLOWED_ORIGINS not set in environment")
 
-CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins.split(",")]
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in (cors_origins or "http://127.0.0.1:8000").split(",")]
 
 
 # Application definition
@@ -235,3 +237,51 @@ LOGGING = {
         },
     },
 }
+
+# SECURITY WARNING: keep the secret key used in production secret!
+SECRET_KEY = os.getenv("SECRET_KEY", "replace-me")
+
+# DEBUG mode
+DEBUG = os.getenv("DEBUG", "True") == "True"
+
+# -------------------------
+# ALLOWED_HOSTS
+# -------------------------
+# Render environment
+RENDER_EXTERNAL_HOSTNAME = os.getenv("RENDER_EXTERNAL_HOSTNAME")
+
+if DEBUG:
+    # Local development
+    ALLOWED_HOSTS = ["127.0.0.1", "localhost"]
+else:
+    # Production
+    ALLOWED_HOSTS = [RENDER_EXTERNAL_HOSTNAME] if RENDER_EXTERNAL_HOSTNAME else []
+
+# -------------------------
+# CSRF & CORS
+# -------------------------
+# Default trusted origins
+default_csrf = ["http://127.0.0.1:8000"]
+
+# Production CORS and CSRF
+csf_origins_env = os.getenv("DJANGO_CSRF_TRUSTED_ORIGINS", "")
+cors_origins_env = os.getenv("CORS_ALLOWED_ORIGINS", "")
+
+CSRF_TRUSTED_ORIGINS = [origin.strip() for origin in csf_origins_env.split(",") if origin.strip()] or default_csrf
+CORS_ALLOWED_ORIGINS = [origin.strip() for origin in cors_origins_env.split(",") if origin.strip()] or default_csrf
+
+# -------------------------
+# SSL settings
+# -------------------------
+SECURE_SSL_REDIRECT = (os.getenv("SECURE_SSL_REDIRECT", "False") == "True") and not DEBUG
+SESSION_COOKIE_SECURE = not DEBUG
+CSRF_COOKIE_SECURE = not DEBUG
+
+# -------------------------
+# Fallback for safety
+# -------------------------
+if not CORS_ALLOWED_ORIGINS and not DEBUG:
+    raise ImproperlyConfigured("CORS_ALLOWED_ORIGINS must be set in production environment")
+
+if not ALLOWED_HOSTS and not DEBUG:
+    raise ImproperlyConfigured("ALLOWED_HOSTS must be set in production environment")
