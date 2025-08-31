@@ -1,272 +1,168 @@
-# DOBS – Digital Occurrence Book System (Capstone Project)
+# 📖 Digital Occurrence Book System (DOBS)
 
-## 📌 Project Overview
-The **Digital Occurrence Book System (DOBS)** is a web-based API built with **Django Rest Framework (DRF)**.  
-It is designed to replace traditional paper-based occurrence books used in security, policing, and control room environments.  
-
-The system allows operators to:
-- Log incidents (occurrences) in real time.  
-- Manage users with role-based access (Operator, Supervisor, Administrator).  
-- Upload evidence such as images.  
-- Search, filter, and organize records for quick retrieval.  
-- Secure the platform with authentication, permissions, and API best practices.  
+A **Django Rest Framework (DRF)** powered API designed to digitize the traditional *Occurrence Book* used in security and law enforcement. The system allows secure logging, searching, and managing of incidents/occurrences, with support for **role-based access control**, **file uploads**, and **report exports**.
 
 ---
 
-## 🛠️ Tech Stack
-- **Backend:** Django, Django REST Framework  
-- **Database:** SQLite (for development)  
-- **Auth:** JWT Authentication (SimpleJWT)  
-- **Security:** CSRF, Django security middleware, DRF permissions  
-- **Testing:** Django Test Framework & DRF test client  
-- **Deployment-ready:** Compatible with Nginx/Apache setups  
+## 🚀 Features
+
+- **User Authentication & Roles**
+  - Custom user model (`Operator`, `Supervisor`, `Administrator`).
+  - JWT authentication (login, refresh).
+  - Role-based permissions using **Groups** and **DRF permissions**.
+
+- **Occurrences Management**
+  - CRUD endpoints for logging incidents.
+  - File uploads (images, documents).
+  - Filtering and search by date, type, or keywords.
+
+- **Reports & Analytics**
+  - Summary counts of incidents.
+  - Time-series reporting of occurrences.
+  - Export reports as **CSV** or **PDF**.
+  - ⚠️ **Known Bug**: PDF export currently returns a document with fields but without populated data. This will be fixed in a future release.
+
+- **Admin Panel**
+  - Django admin with extended user model support.
 
 ---
 
-## 👥 User Roles
-- **Operator** → Create and view occurrences they log.  
-- **Supervisor** → Review, edit, and filter occurrences across the system.  
-- **Administrator** → Full system access, including managing users and permissions.  
+## 🏗️ Tech Stack
+
+- **Backend:** Django, Django REST Framework
+- **Authentication:** JWT (SimpleJWT)
+- **Database:** PostgreSQL (Render Managed DB)
+- **Deployment:** Render Web Service
+- **Testing:** Django Test Framework + Postman
+- **Documentation:** DRF browsable API & Postman Collection
 
 ---
 
-## 🔑 Authentication
-- JWT-based authentication (using **SimpleJWT**).  
-- Endpoints for login, logout, and token refresh.  
-- Users must authenticate to access most resources.  
+## ⚙️ Installation (Local Setup)
 
----
+```bash
+# Clone repo
+git clone https://github.com/<your-username>/dobs.git
+cd dobs
 
-## 📂 Apps Breakdown
-### 1. **Accounts App**
-- Custom user model (with `date_of_birth`, `profile_photo`, and `role`).  
-- Endpoints for registration, login, logout.  
-- JWT integration for authentication.  
+# Create & activate virtual environment
+python -m venv venv
+source venv/bin/activate   # on Mac/Linux
+venv\Scripts\activate      # on Windows
 
-### 2. **Occurrences App**
-- Core app for managing incident records.  
-- Fields: `title`, `description`, `category`, `location`, `date_reported`, `status`, `reported_by`.  
-- Supports image/file uploads.  
-- Role-based access control.  
+# Install dependencies
+pip install -r requirements.txt
 
-### 3. **Reports App**
-- Generate structured reports based on filters (e.g., date, category).  
-- Export-ready endpoints (future scope).  
+# Apply migrations
+python manage.py migrate
 
-### 4. **Posts (Social Media-style Updates)**
-- Allow users to share quick updates, with comment support.  
-- Linked to user authentication.  
+# Create superuser
+python manage.py createsuperuser
 
----
-
-## 🔍 Search & Filtering
-Implemented **DRF filters + full-text search**:  
-- **Search fields:** `title`, `description`, `location`, `category`.  
-- **Filter fields:** `date_reported`, `status`, `category`.  
-- Example query:  
-  ```http
-  GET /api/occurrences/?search=theft&category=Crime&date_reported=2025-08-01
-  ```
-
----
-
-## 🔐 Security Settings
-- CSRF protection enabled for browsable API.  
-- Secure headers applied via Django middleware:
-  - `X-Content-Type-Options: nosniff`  
-  - `X-Frame-Options: DENY`  
-  - `SECURE_BROWSER_XSS_FILTER`  
-- HTTPS-ready configuration for deployment.  
-- Permissions enforced at endpoint level (Operators can’t see all logs, Admins can).  
-
----
-
-## 🧪 Testing & Demo
-- Unit tests for models, serializers, views, and permissions.  
-- API tests using `APITestCase` with JWT authentication.  
-- Tested CRUD operations for all endpoints.  
-- Final demo will be presented using **Postman** to showcase endpoints in action.  
-
----
-
-## 📌 API Endpoints
-
-### 🔒 Accounts
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| POST | `/api/accounts/register/` | Register new user |
-| POST | `/api/accounts/login/` | Login & obtain JWT |
-| POST | `/api/accounts/logout/` | Logout user |
-| POST | `/api/accounts/token/refresh/` | Refresh JWT |
-
-#### Example: Register User
-**Request**
-```http
-POST /api/accounts/register/
-Content-Type: application/json
-
-{
-  "username": "alice",
-  "password": "pass1234",
-  "role": "Operator",
-  "date_of_birth": "1999-05-10"
-}
-```
-**Response**
-```json
-{
-  "id": 1,
-  "username": "alice",
-  "role": "Operator",
-  "date_of_birth": "1999-05-10"
-}
+# Run server
+python manage.py runserver
 ```
 
 ---
 
-### 📝 Occurrences
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/occurrences/` | List all occurrences (with search & filters) |
-| POST | `/api/occurrences/` | Create new occurrence |
-| GET | `/api/occurrences/{id}/` | Retrieve occurrence by ID |
-| PUT/PATCH | `/api/occurrences/{id}/` | Update occurrence |
-| DELETE | `/api/occurrences/{id}/` | Delete occurrence (admin/supervisor only) |
+## 🔑 Environment Variables
 
-#### Example: Create Occurrence
-**Request**
-```http
-POST /api/occurrences/
-Authorization: Bearer <your_token>
-Content-Type: application/json
+Create a `.env` file in the project root:
 
-{
-  "title": "Unauthorized Access",
-  "description": "Suspicious individual entered restricted area",
-  "category": "Security",
-  "location": "Gate 3",
-  "status": "Open"
-}
-```
-**Response**
-```json
-{
-  "id": 5,
-  "title": "Unauthorized Access",
-  "description": "Suspicious individual entered restricted area",
-  "category": "Security",
-  "location": "Gate 3",
-  "status": "Open",
-  "reported_by": "alice",
-  "date_reported": "2025-08-27T19:20:30Z"
-}
+```env
+DEBUG=True
+SECRET_KEY=your-secret-key
+ALLOWED_HOSTS=localhost,127.0.0.1
+
+DATABASE_NAME=dobs_project_db
+DATABASE_USER=dobs_project_db_user
+DATABASE_PASSWORD=yourpassword
+DATABASE_HOST=localhost
+DATABASE_PORT=5432
 ```
 
 ---
 
-### 📊 Reports
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/reports/` | List all reports |
-| GET | `/api/reports/?date=2025-08-20` | Filter reports by date |
-| GET | `/api/reports/?category=Accident` | Filter by category |
+## 🌐 Deployment (Render)
 
-#### Example: Fetch Reports by Category
-**Request**
-```http
-GET /api/reports/?category=Accident
-Authorization: Bearer <your_token>
-```
-**Response**
-```json
-[
-  {
-    "id": 2,
-    "title": "Car Accident",
-    "category": "Accident",
-    "location": "Main Road",
-    "date_reported": "2025-08-20T14:22:00Z",
-    "status": "Closed"
-  }
-]
-```
-
----
-
-### 💬 Posts
-| Method | Endpoint | Description |
-|--------|----------|-------------|
-| GET | `/api/posts/` | List posts |
-| POST | `/api/posts/` | Create post |
-| GET | `/api/posts/{id}/` | Retrieve post |
-| POST | `/api/posts/{id}/comments/` | Add comment to post |
-
-#### Example: Add Comment
-**Request**
-```http
-POST /api/posts/1/comments/
-Authorization: Bearer <your_token>
-Content-Type: application/json
-
-{
-  "text": "Great work on resolving this issue quickly!"
-}
-```
-**Response**
-```json
-{
-  "id": 3,
-  "post": 1,
-  "text": "Great work on resolving this issue quickly!",
-  "author": "supervisor1",
-  "created_at": "2025-08-27T18:55:00Z"
-}
-```
-
----
-
-## 🚀 How to Run Locally
-1. Clone repo:
-   ```bash
-   git clone https://github.com/yourusername/DOBS.git
-   cd DOBS
+1. Push your project to GitHub.
+2. Create a new **Web Service** on [Render](https://render.com).
+3. Connect your repository.
+4. Set **Build Command**:
    ```
-2. Setup environment:
-   ```bash
-   python -m venv .venv
-   source .venv/bin/activate   # Linux/Mac
-   .venv\Scripts\activate      # Windows
-   pip install -r requirements.txt
+   pip install -r requirements.txt && python manage.py collectstatic --noinput && python manage.py migrate
    ```
-3. Run migrations:
-   ```bash
-   python manage.py migrate
+5. Set **Start Command**:
    ```
-4. Create superuser:
-   ```bash
-   python manage.py createsuperuser
+   gunicorn dobs_project.wsgi
    ```
-5. Start server:
-   ```bash
-   python manage.py runserver
-   ```
+6. Add **Environment Variables** (same as `.env`).
+7. Deploy 🚀
 
 ---
 
-## 🌍 Deployment Notes
-- Works with **Gunicorn + Nginx** or **Apache mod_wsgi**.  
-- Update settings for:
-  - `ALLOWED_HOSTS`  
-  - `SECURE_SSL_REDIRECT = True` (for HTTPS)  
-  - Database configs (PostgreSQL recommended for production).  
+## 📡 API Endpoints
+
+| Method | Endpoint                          | Description                     | Auth |
+|--------|----------------------------------|---------------------------------|------|
+| POST   | `/api/token/`                    | Obtain JWT token                | ❌   |
+| POST   | `/api/token/refresh/`            | Refresh JWT token               | ❌   |
+| GET    | `/api/occurrences/`              | List all occurrences            | ✅   |
+| POST   | `/api/occurrences/`              | Create a new occurrence         | ✅   |
+| GET    | `/api/occurrences/{id}/`         | Retrieve single occurrence      | ✅   |
+| PATCH  | `/api/occurrences/{id}/`         | Update an occurrence            | ✅   |
+| DELETE | `/api/occurrences/{id}/`         | Delete an occurrence            | ✅   |
+| GET    | `/api/occurrences/?search=text`  | Search occurrences              | ✅   |
+| GET    | `/api/reports/summary/`          | Summary stats                   | ✅   |
+| GET    | `/api/reports/time-points/`      | Time-series of incidents        | ✅   |
+| GET    | `/api/reports/export/pdf/`       | Export report as PDF (⚠️ bug: fields only, no data) | ✅   |
+| GET    | `/api/reports/export/csv/`       | Export report as CSV            | ✅   |
 
 ---
 
-## 🎯 Final Notes
-The **DOBS Capstone Project** demonstrates beginner-to-intermediate Django + DRF skills, with added polish in:  
-- **Search & filtering** for usability.  
-- **Security settings** for production readiness.  
-- **Thorough testing** for stability.  
-- **Presentation-ready API demo** (via Postman).  
+## 🧪 Testing
+
+Run Django tests:
+
+```bash
+python manage.py test
+```
+
+Or use **Postman** (Collection included below 👇).
 
 ---
+
+## 📦 Postman Collection
+
+A ready-to-import **Postman Collection** (`DOBS.postman_collection.json`) is provided to test:
+
+- Authentication (login, refresh).
+- CRUD on occurrences.
+- File uploads.
+- Filtering/search.
+- Export endpoints (CSV & PDF).
+
+📥 [Download Collection](./docs/DOBS.postman_collection.json)
+
+---
+
+## 📊 Example Workflow
+
+1. **Login** → `/api/token/`
+2. **Create occurrence** → `/api/occurrences/`
+3. **Upload image** → `/api/occurrences/` (multipart form-data)
+4. **Search** → `/api/occurrences/?search=gate`
+5. **Export** → `/api/reports/export/pdf/`
+
+---
+
+## 📄 License
+
+This project is licensed under the MIT License.
+
+---
+
+## 👨‍💻 Author
+
+**Thubelihle (Developer & Security Professional)**  
+Built as part of the **ALX Backend Development Program**.

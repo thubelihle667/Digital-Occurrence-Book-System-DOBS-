@@ -111,17 +111,6 @@ WSGI_APPLICATION = 'DOBS_project.wsgi.application'
 # Database
 # https://docs.djangoproject.com/en/5.2/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'dobs_project_db',
-        'USER': 'dobs_project_db_user',
-        'PASSWORD': 'vZobTYDWzggnkIUzFctE2Dc8ApjYuB91',
-        'HOST': 'dpg-d2pj7056ubrc73cejr10-a',
-        'PORT': '5432',
-    }
-}
-
 
 # Password validation
 # https://docs.djangoproject.com/en/5.2/ref/settings/#auth-password-validators

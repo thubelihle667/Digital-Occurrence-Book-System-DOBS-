@@ -1,0 +1,131 @@
+{
+  "info": {
+    "name": "DOBS API Collection",
+    "_postman_id": "dobs-collection-001",
+    "description": "Postman collection for testing the Digital Occurrence Book System (DOBS) API endpoints.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "Auth - Login",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"username\": \"{{username}}\", \"password\": \"{{password}}\" }"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/token/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "token"]
+        }
+      }
+    },
+    {
+      "name": "Occurrences - List",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/occurrences/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "occurrences"]
+        }
+      }
+    },
+    {
+      "name": "Occurrences - Create",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" },
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{ \"title\": \"Test Incident\", \"description\": \"Description here\", \"date_reported\": \"2025-08-31T15:00:00Z\", \"location\": \"Main Gate\" }"
+        },
+        "url": {
+          "raw": "{{base_url}}/api/occurrences/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "occurrences"]
+        }
+      }
+    },
+    {
+      "name": "Occurrences - Upload Image",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "body": {
+          "mode": "formdata",
+          "formdata": [
+            { "key": "title", "value": "Incident with Image", "type": "text" },
+            { "key": "description", "value": "Test file upload", "type": "text" },
+            { "key": "image", "src": ["/path/to/file.jpg"], "type": "file" }
+          ]
+        },
+        "url": {
+          "raw": "{{base_url}}/api/occurrences/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "occurrences"]
+        }
+      }
+    },
+    {
+      "name": "Reports - Summary",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/reports/summary/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", "summary"]
+        }
+      }
+    },
+    {
+      "name": "Reports - Export CSV",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/reports/export/csv/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", "export", "csv"]
+        }
+      }
+    },
+    {
+      "name": "Reports - Export PDF (⚠️ bug: fields only, no data)",
+      "request": {
+        "method": "GET",
+        "header": [
+          { "key": "Authorization", "value": "Bearer {{auth_token}}" }
+        ],
+        "url": {
+          "raw": "{{base_url}}/api/reports/export/pdf/",
+          "host": ["{{base_url}}"],
+          "path": ["api", "reports", "export", "pdf"]
+        }
+      }
+    }
+  ],
+  "variable": [
+    { "key": "base_url", "value": "https://your-dobs-service.onrender.com" },
+    { "key": "username", "value": "testuser" },
+    { "key": "password", "value": "testpassword" },
+    { "key": "auth_token", "value": "" }
+  ]
+}
