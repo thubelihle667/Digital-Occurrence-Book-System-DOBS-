@@ -16,7 +16,8 @@ import os
 import dj_database_url
 from decouple import config
 from django.core.exceptions import ImproperlyConfigured
-
+from dotenv import load_dotenv
+load_dotenv()
 
 # Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
@@ -146,6 +147,12 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/5.2/howto/static-files/
 DEFAULT_FILE_STORAGE = "cloudinary_storage.storage.MediaCloudinaryStorage"
+CLOUDINARY_STORAGE = {
+    "CLOUD_NAME": os.getenv('CLOUD_NAME'),
+    "API_KEY": os.getenv('CLOUDINARY_API_KEY'),
+    "API_SECRET": os.getenv('CLOUDINARY_API_SECRET'),
+}
+
 CLOUDINARY_URL = config("CLOUDINARY_URL", default="")
 MEDIA_URL = "/media/"
 MEDIA_ROOT = BASE_DIR / "media"
