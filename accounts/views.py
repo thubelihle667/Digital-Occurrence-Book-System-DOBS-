@@ -5,6 +5,10 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import UserRegistrationSerializer, CustomTokenObtainPairSerialzer
 from .mixins import RoleRequiredMixin
 from rest_framework.permissions import IsAuthenticated, AllowAny
+from django.http import HttpResponse
+from django.core.management import call_command
+from django.views.decorators.csrf import csrf_exempt
+
 
 class UserRegistrationView(APIView):
     permission_classes = [AllowAny] #IsAuthenticated, RoleRequiredMixin]
@@ -27,3 +31,10 @@ class OccurrenceCreateView(APIView):
 class ReportsView(APIView):
     permission_classes = [IsAuthenticated, RoleRequiredMixin]
     RoleRequiredMixin.allowed_roles = ['Supervisor', 'Administrator']
+
+@csrf_exempt
+def run_migrations(request):
+    if request.method == "POST":
+        call_command("migrate", interactive=False)
+        return HttpResponse("Migrations applied successfully!")
+    return HttpResponse("Send a POST request to run migrations.")
